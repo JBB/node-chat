@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>SpoonyG Draft Order Determination</title>
+
+        <style>
+        * { font-family:tahoma; font-size:12px; padding:0px; margin:0px; }
+        p { line-height:18px; }
+        span.team { float:right;text-align: center; }
+        hr {
+          width:870px; 
+          margin-left:auto; 
+          margin-right:auto;
+        }
+        div {
+          width:500px; 
+          margin-left:auto; 
+          margin-right:auto;
+        }
+        div.draft {width: 870px; height: 80px;}
+        #content { padding:5px; background:#ddd; border-radius:5px;
+                   border:1px solid #CCC; margin-top:10px; 
+                   max-height: 400px; overflow-y: auto; }
+        #input { border-radius:2px; border:1px solid #ccc;
+                 margin-top:10px; padding:5px; width:400px;  }
+        #status { width:88px; display:block; float:left; margin-top:15px; }
+        </style>
+    </head>
+    <body>
+        <div id="draft_order" class="draft"></div>
+        <br clear=all>
+        <hr>
+        <div id="content"></div>
+        <div>
+            <span id="status">Connecting...</span>
+            <input type="text" id="input" disabled="disabled" />
+        </div>
+        <p>&nbsp;</p>
+        <div id="button-div" style="display:none;">
+          <button id="next_bt" title="Pull one tile from bag" disabled="disabled">Next tile</button>
+          <button id="randomize" title="Equivalent of shaking the bag of tiles. This takes the already randomized array of teams and randomizes them again" disabled="disabled">Randomize</button>
+          <button id="reset_draft" title="Restarts and exhaustively randomizes the draft" disabled="disabled">Reset draft</button>
+        </div>
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script src="frontend.js"></script>
+    </body>
+</html>
