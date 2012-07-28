@@ -34,14 +34,22 @@ colors.sort(function(a,b) { return Math.random() > 0.5; } );
 
 // Array with SpoonyG teams
 var draft_history = [ ];
+var division_history = [ ];
+var division_locations = [ ];
 var max_teams = 12;
 var count = max_teams; //number of teams drafting
-var dir = "spoonyg-images/";
+var directory = "spoonyg-images/";
 var team_images;
 var number_colors = 11;
 var color_count = 0;
+// JBB This would get calculated by taking team_images array and backing out past 
+// champs that are retunring to their respective divs
+var division_images; 
+// JBB At point that team images can be uploaded, admin should be able to use interface to indicate past champs
+var division_anchor_images = [{loc: 'west', imgsrc: directory + 'picciottos.jpg'}, {loc: 'east', imgsrc: directory + 'ongbak.jpg'},{ loc: 'central', imgsrc: directory + 'powerball.jpg'}];
 
 reset_draft();
+reset_divisions();
 
 function reset_draft() {
   draft_history = [];
@@ -52,6 +60,20 @@ function reset_draft() {
   var i = 0;
   for(i=0;i<secs;i++) {
     team_images.sort(function(a,b) { return Math.random() > 0.5; } );
+  }
+}
+
+function reset_divisions() {
+  division_history = [];
+  division_locations = ['east','east','east','west','west','west','central','central','central'];
+  division_images = ['baggers.gif', 'jammers.jpg', 'madness.gif', 'chung.jpg', 'kidz.jpg', 'oilers.gif', 'shoptaw.jpg', 'chibolas.gif', 'squid.gif'];
+  var d = new Date();
+  var secs = d.getSeconds();
+  secs += 900;
+  var i = 0;
+  for(i=0;i<secs;i++) {
+    division_images.sort(function(a,b) { return Math.random() > 0.5; } );
+    division_locations.sort(function(a,b) { return Math.random() > 0.5; } );
   }
 }
 
@@ -78,12 +100,9 @@ var wsServer = new webSocketServer({
 wsServer.on('request', function(request) {
     console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
 
-    // accept connection - you should check 'request.origin' to make sure that
-    // client is connecting from your website
-    // (http://en.wikipedia.org/wiki/Same_origin_policy)
-    // JBB - todo. Make sure we are checking this appropriately
+    // JBB - Is this appropriately secured?
+    if (request.origin != "http://ec2-23-21-17-177.compute-1.amazonaws.com") { return; }
     var connection = request.accept(null, request.origin);
-    console.log(request.origin); 
     // we need to know client index to remove them on 'close' event
     var index = clients.push(connection) - 1;
     var userName = false;
@@ -98,6 +117,10 @@ wsServer.on('request', function(request) {
     // send history of tiles too
     if (draft_history.length > 0) {
         connection.sendUTF(JSON.stringify( { type: 'draft_history', data: draft_history} ));
+    }
+    // send history of divisions too
+    if (division_history.length > 0) {
+        connection.sendUTF(JSON.stringify( { type: 'division_history', data: division_history} ));
     }
     // user sent some message
     connection.on('message', function(message) {
@@ -118,7 +141,7 @@ wsServer.on('request', function(request) {
                 if (count > 0) {
                   var obj = {
                      name:  count,
-                     imgsrc: dir + team_images.shift()
+                     imgsrc: directory + team_images.shift()
                   };
                   draft_history.push(obj);
                   count--;
@@ -129,6 +152,29 @@ wsServer.on('request', function(request) {
                       clients[i].sendUTF(json);
                   }
                 }
+            } else if (message.utf8Data === 'next-division-tile') { 
+                if (division_history.length > 0) {
+                  var obj = {
+                     loc:  division_locations.shift(),
+                     imgsrc: directory + division_images.shift()
+                  };
+                  division_history.push(obj);
+                  
+                  // broadcast message to all connected clients
+                  var json = JSON.stringify({ type:'div_tile', data: obj });
+                  for (var i=0; i < clients.length; i++) {
+                      clients[i].sendUTF(json);
+                  }
+                } else {
+                  // send anchors all connected clients
+                    var json = JSON.stringify({ type:'div_anchors', data: division_anchor_images });
+                    for (var j=0; j < clients.length; j++) {
+                      clients[j].sendUTF(json);
+                    }
+                    for (var i=0; i < division_anchor_images.length; i++) {
+                      division_history.push(division_anchor_images[i]);
+                    }
+                  }
             } else if (message.utf8Data === 'Reset-draft') { 
                 reset_draft();
                 count = max_teams;
@@ -138,8 +184,19 @@ wsServer.on('request', function(request) {
                     clients[i].sendUTF(json);
                 }
                 record_history("admin reset draft",userName,userColor);
+            } else if (message.utf8Data === 'Reset-divisions') { 
+                reset_divisions();
+                // broadcast message to all connected clients
+                var json = JSON.stringify({ type:'wipe_divs' });
+                for (var i=0; i < clients.length; i++) {
+                    clients[i].sendUTF(json);
+                }
+                record_history("admin reset divisions",userName,userColor);
             } else if (message.utf8Data === 'randomize-it') { 
                 team_images.sort(function(a,b) { return Math.random() > 0.5; } );
+            } else if (message.utf8Data === 'randomize-divs') { 
+                division_images.sort(function(a,b) { return Math.random() > 0.5; } );
+                division_locations.sort(function(a,b) { return Math.random() > 0.5; } );
             } else { // log and broadcast the message
                 console.log((new Date()) + ' Received Message from '
                             + userName + ': ' + message.utf8Data);

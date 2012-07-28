@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
-        <title>SpoonyG Draft Order Determination</title>
+      <meta charset="utf-8">
+      <title>SpoonyG Draft Order Determination</title>
 
-        <style>
+      <style>
         * { font-family:tahoma; font-size:12px; padding:0px; margin:0px; }
         p { line-height:18px; }
         span.team { float:right;text-align: center; }
@@ -25,12 +25,36 @@
         #input { border-radius:2px; border:1px solid #ccc;
                  margin-top:10px; padding:5px; width:400px;  }
         #status { width:88px; display:block; float:left; margin-top:15px; }
-        </style>
+        table {width: 500px;}
+        td {text-align: center;}
+        span.DivisionTitle {font-style: bold; text-decoration: underline;}
+        img.division {width: 36px;}
+      </style>
     </head>
     <body>
         <div id="draft_order" class="draft"></div>
         <br clear=all>
         <hr>
+
+        <div id="divisions">
+          <table id="theDivisions">
+            <tr>
+              <td id="east"><span class="DivisionTitle">East</span>
+                <br>
+                <span id="east_division"></span>
+              </td>
+              <td id="central"><span class="DivisionTitle">Central</span>
+                <br>
+                <span id="central_division"></span>
+              </td>
+              <td id="west"><span class="DivisionTitle">West</span>
+                <br>
+                <span id="west_division"></span>
+              </td>
+             </tr>
+           </table>
+        </div>
+
         <div id="content"></div>
         <div>
             <span id="status">Connecting...</span>
@@ -41,7 +65,17 @@
           <button id="next_bt" title="Pull one tile from bag" disabled="disabled">Next tile</button>
           <button id="randomize" title="Equivalent of shaking the bag of tiles. This takes the already randomized array of teams and randomizes them again" disabled="disabled">Randomize</button>
           <button id="reset_draft" title="Restarts and exhaustively randomizes the draft" disabled="disabled">Reset draft</button>
+          <br><br>
+          <button id="populateDivision" title="Return last year's division winners to that same division" disabled="disabled">Add a team to a division</button>
+          <button id="randomizeDiv" title="Equivalent of shaking the bag of tiles. This takes the already randomized array of teams and randomizes them again" disabled="disabled">"Shake" division "bag"</button>
+          <button id="reset_divisions" title="Restarts and exhaustively randomizes the division detminations" disabled="disabled">Reset divisions</button>
+          
+          
+
+          </div>
         </div>
+        <p>&nbsp;</p>
+        <div>This chat works in Chrome 14+, Firefox 7+, IE10+ and Safari 6+</div>
 
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script src="frontend.js"></script>

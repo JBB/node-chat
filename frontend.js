@@ -9,7 +9,13 @@ $(function () {
     var draft_order = $('#draft_order');
     var status = $('#status');
     var randomize = $('#randomize');
+    var randomize_divs = $('#randomizeDiv');
     var reset_draft = $('#reset_draft');
+    var reset_divisions = $('#reset_divisions');
+    var populateDivision = $('#populateDivision');
+    var west_division = $('#west_division');
+    var east_division = $('#east_division');
+    var central_division = $('#central_division');
 
     //sequence initalized
     var sequence_part1 = false;
@@ -32,7 +38,7 @@ $(function () {
     }
 
     // open connection
-    var connection = new WebSocket('ws://127.0.0.1:1337');
+    var connection = new WebSocket('ws://ec2-23-21-17-177.compute-1.amazonaws.com:1337');
 
     connection.onopen = function () {
         // first we want users to enter their names
@@ -69,6 +75,10 @@ $(function () {
             //next_tile.prop("disabled", false);
             randomize.removeAttr('disabled');
             reset_draft.removeAttr('disabled');
+            populateDivision.removeAttr('disabled');
+            //next_tile.prop("disabled", false);
+            randomize_divs.removeAttr('disabled');
+            reset_divisions.removeAttr('disabled');
             // from now user can start sending messages
         } else if (json.type === 'history') { // entire message history
             // insert every single message to the chat window
@@ -77,7 +87,7 @@ $(function () {
                            json.data[i].color, new Date(json.data[i].time));
             }
         } else if (json.type === 'draft_history') { // entire draft history
-            // insert every single message to the chat window
+            // insert every single team to the draft chart
             for (var i=0; i < json.data.length; i++) {
               addTile(json.data[i].name, json.data[i].imgsrc);
             }
@@ -88,6 +98,21 @@ $(function () {
             draft_order.empty();
             //addMessage('admin', 'draft reset by admin',
             //           'black', new Date());
+        } else if (json.type === 'division_history') { // entire draft history
+            // insert every single team to the division 
+            for (var i=0; i < json.data.length; i++) {
+              addDivTeam(json.data[i].loc, json.data[i].imgsrc);
+            }
+        } else if (json.type === 'div_anchors') { // it's a single tile
+            populateDivision.removeAttr('disabled'); // let the user pull another tile
+            setupDivs(json);
+        } else if (json.type === 'div_tile') { // it's a single tile
+            populateDivision.removeAttr('disabled'); // let the user pull another tile
+            addDivTeam(json.data.loc, json.data.imgsrc);
+        } else if (json.type === 'wipe_divs') { // draft being reset
+            west_division.empty();
+            east_division.empty();
+            central_division.empty();
         } else if (json.type === 'message') { // it's a single message
             input.removeAttr('disabled'); // let the user write another message
             addMessage(json.data.author, json.data.text,
@@ -161,6 +186,41 @@ $(function () {
     });
 
     /**
+     * Send mesage when user presses 'Add team to division' button
+     */
+    populateDivision.click(function() {
+        var msg = "next-division-tile";
+        // send the message as an ordinary text
+        connection.send(msg);
+        // disable the input field to make the user wait until server
+        // sends back response
+        populateDivision.attr('disabled', 'disabled');
+        populateDivision.attr('disabled','true');
+    });
+
+    /**
+     * Send mesage when user presses 'Randomize divisions' button
+     */
+    randomize_divs.click(function() {
+        var msg = "randomize-divs";
+        // send the message as an ordinary text
+        connection.send(msg);
+    });
+
+    /**
+     * Send mesage when user presses 'Reset divisions' button
+     */
+    reset_divisions.click(function() {
+        var msg = "Reset-divisions";
+        // send the message as an ordinary text
+        connection.send(msg);
+        west_division.empty();
+        east_division.empty();
+        central_division.empty();
+        populateDivision.removeAttr('disabled');
+    });
+
+    /**
      * This method is optional. If the server wasn't able to respond to the
      * in 3 seconds then show some error message to notify the user that
      * something is wrong.
@@ -190,4 +250,33 @@ $(function () {
     function addTile(team, imgsrc) {
         draft_order.append('<span class="team">' + team + '<br><img src="' + imgsrc + '"></span>');
     }
+
+    /**
+     * Add tile to the divisions 
+     */
+    function addDivTeam(loc, imgsrc) {
+      if (loc === 'east') {
+          east_division.append('<br><img class="division" src="' + imgsrc + '">');
+      } else if (loc === 'central') {
+          central_division.append('<br><img class="division" src="' + imgsrc + '">');
+      } else if (loc === 'west') {
+          west_division.append('<br><img class="division" src="' + imgsrc + '">');
+      }
+    }
+
+    /**
+     * Add division anchors
+     */
+    function setupDivs(json) {
+      for (var i=0; i < json.data.length; i++) {
+        if (json.data[i].loc === 'east') {
+          east_division.append('<br><img class="division" src="' + json.data[i].imgsrc + '">');
+        } else if (json.data[i].loc === 'central') {
+          central_division.append('<br><img class="division" src="' + json.data[i].imgsrc + '">');
+        } else if (json.data[i].loc === 'west') {
+          west_division.append('<br><img class="division" src="' + json.data[i].imgsrc + '">');
+        }
+      }
+    }
+
 });
